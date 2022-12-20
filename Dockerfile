@@ -22,7 +22,7 @@ RUN set -eux; \
 #RUN curl -sL https://deb.nodesource.com/setup_lts.x | bash
 
 # Install shopify
-RUN npm install -g @shopify/cli
+RUN npm install -g @shopify/cli @shopify/theme
 
 # Install themekit
 # RUN curl -s https://shopify.dev/themekit.py | sudo python3
@@ -35,4 +35,4 @@ RUN npm install -g @shopify/cli
 
 ENTRYPOINT [ "shopify" ]
 
-CMD ["version"]
+CMD ["help"]
