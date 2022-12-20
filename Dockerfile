@@ -14,6 +14,8 @@ RUN set -eux; \
 	apt-get install -y --no-install-recommends \
 		$SHOPIFY_DEPS \
 	; \
+    && mkdir -p ~/.config/shopify \
+    && printf "[analytics]\nenabled = false\n" > ~/.config/shopify/config \
 	rm -rf /var/lib/apt/lists/*
 
 # Configure Node.js version
@@ -27,9 +29,9 @@ RUN npm install -g @shopify/cli
 
 #WORKDIR /shopify
 
-ENV PORT 3000
-
-EXPOSE 3456 8081 $PORTS 8082
+#ENV PORTS 3000
+#
+#EXPOSE 3456 8081 $PORTS 8082
 
 ENTRYPOINT [ "shopify" ]
 
