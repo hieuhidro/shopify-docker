@@ -25,14 +25,14 @@ RUN set -eux; \
 RUN npm install -g @shopify/cli @shopify/theme
 
 # Install themekit
-RUN curl -s https://shopify.dev/themekit.py | sudo python3
+#RUN curl -s https://shopify.dev/themekit.py | sudo python3
 
 WORKDIR /shopify
 
-ENV PORTS 3000
+ENV PORTS 3456
 
-EXPOSE 3456 8081 $PORTS 8082
+EXPOSE $PORTS 8081
 
-ENTRYPOINT ["/bin/bash"]
+ENTRYPOINT ["shopify"]
 
-#CMD [ "bash" ]
+#CMD [ "tail", "-f", "/dev/null" ]
