@@ -14,8 +14,8 @@ RUN set -eux; \
 	apt-get install -y --no-install-recommends \
 		$SHOPIFY_DEPS \
 	; \
-    && mkdir -p ~/.config/shopify \
-    && printf "[analytics]\nenabled = false\n" > ~/.config/shopify/config \
+    mkdir -p ~/.config/shopify \
+    && printf "[analytics]\nenabled = false\n" > ~/.config/shopify/config ; \
 	rm -rf /var/lib/apt/lists/*
 
 # Configure Node.js version
