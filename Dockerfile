@@ -1,9 +1,14 @@
-FROM ruby:buster
+FROM ruby:slim-buster
 
 ENV CLI_VERSION 2.33.0
 
+ENV SHOPIFY_CLI_DEPS build-essential \
+                    libffi-dev \
+                    ruby-dev \
+                    sudo
+
 RUN apt update \
-    && apt install wget sudo -y \
+    && apt install $SHOPIFY_CLI_DEPS -y \
     && gem install shopify-cli -v $CLI_VERSION \
     && mkdir -p ~/.config/shopify \
     && printf "[analytics]\nenabled = false\n" > ~/.config/shopify/config \
