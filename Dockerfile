@@ -2,9 +2,11 @@ FROM node:buster-slim
 
 # (see persistent deps below)
 ENV SHOPIFY_DEPS \
+        sudo \
 		curl \
 		g++ \
 		gcc \
+		python3 \
 		ruby-full \
 		ruby-dev
 
@@ -20,17 +22,17 @@ RUN set -eux; \
 #RUN curl -sL https://deb.nodesource.com/setup_lts.x | bash
 
 # Install shopify
-RUN npm install -g @shopify/cli
+RUN npm install -g @shopify/cli @shopify/theme
 
 # Install themekit
-# RUN curl -s https://shopify.dev/themekit.py | sudo python3
+RUN curl -s https://shopify.dev/themekit.py | sudo python3
 
-#WORKDIR /shopify
+WORKDIR /shopify
 
 ENV PORT 3000
 
 EXPOSE 3456 8081 $PORTS 8082
 
-ENTRYPOINT [ "shopify" ]
+ENTRYPOINT ["/bin/bash"]
 
-CMD ["version"]
+#CMD [ "bash" ]
