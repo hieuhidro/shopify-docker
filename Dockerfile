@@ -1,17 +1,36 @@
-FROM ruby:buster
+FROM node:buster-slim
 
-ENV CLI_VERSION 2.33.0
+# (see persistent deps below)
+ENV SHOPIFY_DEPS \
+		curl \
+		g++ \
+		gcc \
+		ruby-full \
+		ruby-dev
 
-RUN apt update \
-    && apt install wget sudo -y \
-    && gem install shopify-cli -v $CLI_VERSION \
-    && mkdir -p ~/.config/shopify \
-    && printf "[analytics]\nenabled = false\n" > ~/.config/shopify/config \
-    && curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash - \
-    && sudo apt-get install -y nodejs \
-    && rm -rf /var/lib/apt/lists/*
+# persistent / runtime deps
+RUN set -eux; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends \
+		$SHOPIFY_DEPS \
+	; \
+	rm -rf /var/lib/apt/lists/*
 
-WORKDIR /shopify
+# Configure Node.js version
+#RUN curl -sL https://deb.nodesource.com/setup_lts.x | bash
+
+# Install shopify
+RUN npm install -g @shopify/cli
+
+# Install themekit
+# RUN curl -s https://shopify.dev/themekit.py | sudo python3
+
+#WORKDIR /shopify
+
+ENV PORT 3000
+
+EXPOSE 3456 8081 $PORTS 8082
 
 ENTRYPOINT [ "shopify" ]
+
 CMD ["version"]
