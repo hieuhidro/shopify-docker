@@ -29,7 +29,7 @@ RUN curl -s https://shopify.dev/themekit.py | sudo python3
 
 WORKDIR /shopify
 
-ENV PORT 3000
+ENV PORTS 3000
 
 EXPOSE 3456 8081 $PORTS 8082
 
