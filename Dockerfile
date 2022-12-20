@@ -22,4 +22,4 @@ RUN curl -s https://shopify.dev/themekit.py | sudo python3
 WORKDIR /shopify
 
 ENTRYPOINT [ "theme" ]
-CMD ["help"]
+CMD ["version"]
