@@ -16,6 +16,7 @@ RUN set -eux; \
 	; \
     mkdir -p ~/.config/shopify \
     && printf "[analytics]\nenabled = false\n" > ~/.config/shopify/config ; \
+    curl -sL https://deb.nodesource.com/setup_lts.x | bash; \
 	rm -rf /var/lib/apt/lists/*
 
 # Configure Node.js version
