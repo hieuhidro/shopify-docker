@@ -1,4 +1,4 @@
-FROM debian:buster as ruby-build
+FROM debian:buster-slim as ruby-build
 
 RUN set -eux; \
 	apt-get update; \
@@ -86,43 +86,34 @@ FROM ruby:3.0.5-slim as ruby3-0-build
 
 FROM node:lts-slim
 
-COPY --from=ruby-build /usr/src/ruby /usr/src/ruby
-
 # (see persistent deps below)
-ENV SHOPIFY_DEPS \
-		curl \
-		g++ \
-		gcc \
-		make \
-		libbz2-dev \
-		libgdbm-compat-dev \
-		libglib2.0-dev \
-		libncurses-dev \
-		libreadline-dev \
-		libxml2-dev \
-		libxslt-dev \
-		ruby-dev \
-		ruby-full
 
 # persistent / runtime deps
 RUN set -eux; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
-		$SHOPIFY_DEPS \
+            curl \
+            g++ \
+            gcc \
+            make \
+            ruby-dev \
+            ruby-full \
 	; \
-    mkdir -p ~/.config/shopify \
-    && printf "[analytics]\nenabled = false\n" > ~/.config/shopify/config ; \
 	rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g @shopify/cli @shopify/theme
+RUN mkdir -p ~/.config/shopify \
+    && printf "[analytics]\nenabled = false\n" > ~/.config/shopify/config ; \
+    npm install -g @shopify/cli @shopify/theme;
 
-RUN set -eux; \
-    cd /usr/src/ruby; \
+COPY --from=ruby-build /usr/src/ruby /usr/src/ruby
+
+# Install ruby and bundler
+RUN cd /usr/src/ruby; \
     make install; \
-#    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
     cd /; \
     rm -r /usr/src/ruby; \
-    gem install bundler;
+    gem install bundler; \
+    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false;
 
 ## INSTALL RUBY
 ENV GEM_HOME /usr/local/bundle
@@ -132,8 +123,6 @@ ENV PATH $GEM_HOME/bin:$PATH
 # adjust permissions of a few directories for running "gem install" as an arbitrary user
 RUN mkdir -p "$GEM_HOME" && chmod 777 "$GEM_HOME"
 
-COPY --from=ruby3-0-build /usr/local/lib/ruby/3.0.0 /usr/local/lib/ruby/3.0.0
-
 # Configure Node.js version
 #RUN curl -sL https://deb.nodesource.com/setup_lts.x | bash
 
@@ -141,6 +130,8 @@ COPY --from=ruby3-0-build /usr/local/lib/ruby/3.0.0 /usr/local/lib/ruby/3.0.0
 #RUN npm install -g @shopify/cli @shopify/theme
 COPY cli/authorize.js /usr/local/lib/node_modules/\@shopify/cli/node_modules/\@shopify/cli-kit/dist/session/authorize.js
 COPY theme/authorize.js /usr/local/lib/node_modules/\@shopify/theme/node_modules/\@shopify/cli-kit/dist/session/authorize.js
+
+COPY --from=ruby3-0-build /usr/local/lib/ruby/3.0.0 /usr/local/lib/ruby/3.0.0
 
 # Install themekit
 # RUN curl -s https://shopify.dev/themekit.py | sudo python3
@@ -151,6 +142,6 @@ WORKDIR /shopify
 #
 #EXPOSE 3456 8081 $PORTS 8082
 
-ENTRYPOINT [ "/bin/bash" ]
+ENTRYPOINT [ "shopify" ]
 # shopify theme pull --store=forix-technical-enablement.myshopify.com
-#CMD ["help"]
+CMD ["help"]
