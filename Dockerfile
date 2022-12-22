@@ -18,5 +18,11 @@ RUN apt update \
 
 WORKDIR /shopify
 
+COPY docker-entrypoint.sh /usr/local/bin/
+
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT [ "docker-entrypoint.sh" ]
+
 ENTRYPOINT [ "shopify" ]
-CMD ["version"]
+CMD ["shopify"]
