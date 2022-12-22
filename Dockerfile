@@ -6,20 +6,27 @@ ENV SHOPIFY_DEPS \
 		curl \
 		g++ \
 		gcc \
-		python
+		python3
 
-RUN apt update \
-    && apt install -y --no-install-recommends \
+RUN set -eux; \
+    apt-get update \
+    && apt-get install -y --no-install-recommends \
     $SHOPIFY_DEPS \
     && mkdir -p ~/.config/shopify \
     && printf "[analytics]\nenabled = false\n" > ~/.config/shopify/config \
     # Configure Node.js version
-    && curl -sL https://deb.nodesource.com/setup_lts.x | bash \
-    && rm -rf /var/lib/apt/lists/*
+    curl -sL https://deb.nodesource.com/setup_lts.x | bash; \
+    apt-get install -y --no-install-recommends nodejs \
+    ; \
+    rm -rf /var/lib/apt/lists/*
 
 RUN curl -s https://shopify.dev/themekit.py | sudo python3
 
 WORKDIR /shopify
+COPY docker-entrypoint.sh /usr/local/bin/
 
-ENTRYPOINT [ "theme" ]
-CMD ["version"]
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT [ "docker-entrypoint.sh" ]
+
+CMD ["theme"]
