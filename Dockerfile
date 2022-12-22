@@ -82,10 +82,9 @@ RUN set -eux; \
 	; \
 	make -j "$(nproc)";
 
-FROM ruby:3.0.5-slim as ruby3-0-build
-
 FROM node:lts-slim
 
+#COPY --from=ruby-build /usr/local/lib/ruby /usr/local/lib/ruby
 COPY --from=ruby-build /usr/src/ruby /usr/src/ruby
 
 # (see persistent deps below)
@@ -94,13 +93,6 @@ ENV SHOPIFY_DEPS \
 		g++ \
 		gcc \
 		make \
-		libbz2-dev \
-		libgdbm-compat-dev \
-		libglib2.0-dev \
-		libncurses-dev \
-		libreadline-dev \
-		libxml2-dev \
-		libxslt-dev \
 		ruby-dev \
 		ruby-full
 
@@ -131,8 +123,6 @@ ENV BUNDLE_SILENCE_ROOT_WARNING=1 \
 ENV PATH $GEM_HOME/bin:$PATH
 # adjust permissions of a few directories for running "gem install" as an arbitrary user
 RUN mkdir -p "$GEM_HOME" && chmod 777 "$GEM_HOME"
-
-COPY --from=ruby3-0-build /usr/local/lib/ruby/3.0.0 /usr/local/lib/ruby/3.0.0
 
 # Configure Node.js version
 #RUN curl -sL https://deb.nodesource.com/setup_lts.x | bash
