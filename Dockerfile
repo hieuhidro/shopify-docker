@@ -151,6 +151,6 @@ WORKDIR /shopify
 #
 #EXPOSE 3456 8081 $PORTS 8082
 
-ENTRYPOINT [ "/bin/bash" ]
+ENTRYPOINT [ "shopify" ]
 # shopify theme pull --store=forix-technical-enablement.myshopify.com
-#CMD ["help"]
+CMD ["help"]
