@@ -114,8 +114,6 @@ RUN set -eux; \
     && printf "[analytics]\nenabled = false\n" > ~/.config/shopify/config ; \
 	rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g @shopify/cli @shopify/app
-
 RUN set -eux; \
     cd /usr/src/ruby; \
     make install; \
@@ -134,6 +132,7 @@ RUN mkdir -p "$GEM_HOME" && chmod 777 "$GEM_HOME"
 
 COPY --from=ruby3-0-build /usr/local/lib/ruby/3.0.0 /usr/local/lib/ruby/3.0.0
 
+RUN npm install -g @shopify/cli @shopify/app @shopify/theme
 # Configure Node.js version
 #RUN curl -sL https://deb.nodesource.com/setup_lts.x | bash
 
