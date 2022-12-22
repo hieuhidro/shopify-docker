@@ -114,7 +114,7 @@ RUN set -eux; \
     && printf "[analytics]\nenabled = false\n" > ~/.config/shopify/config ; \
 	rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g @shopify/cli @shopify/theme
+RUN npm install -g @shopify/cli @shopify/app
 
 RUN set -eux; \
     cd /usr/src/ruby; \
@@ -150,7 +150,10 @@ WORKDIR /shopify
 #ENV PORTS 3000
 #
 #EXPOSE 3456 8081 $PORTS 8082
+COPY docker-entrypoint.sh /usr/local/bin/
 
-ENTRYPOINT [ "shopify" ]
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT [ "docker-entrypoint.sh" ]
 # shopify theme pull --store=forix-technical-enablement.myshopify.com
-CMD ["help"]
+CMD ["shopify"]
