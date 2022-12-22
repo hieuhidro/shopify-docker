@@ -132,14 +132,17 @@ RUN mkdir -p "$GEM_HOME" && chmod 777 "$GEM_HOME"
 
 COPY --from=ruby3-0-build /usr/local/lib/ruby/3.0.0 /usr/local/lib/ruby/3.0.0
 
-RUN npm install -g @shopify/cli @shopify/app @shopify/theme
+RUN set -eux; \
+    npm install -g @shopify/cli @shopify/app @shopify/theme @shopify/ngrok \
+    && npm cache clean --force && rm -rf /tmp/* ; \
+    cd /usr/local/lib/node_modules/\@shopify && \
+    grep -IRl "127.0.0.1" ./ | grep 'authorize.js' | xargs sed -i 's/127.0.0.1/0.0.0.0/g' && \
+    grep -IRl 'http://${host}' ./ | grep 'authorize.js' | xargs sed -i 's/http:\/\/\${host}/http:\/\/127.0.0.1/g'
 # Configure Node.js version
 #RUN curl -sL https://deb.nodesource.com/setup_lts.x | bash
 
 # Install shopify
 #RUN npm install -g @shopify/cli @shopify/theme
-COPY cli/authorize.js /usr/local/lib/node_modules/\@shopify/cli/node_modules/\@shopify/cli-kit/dist/session/authorize.js
-COPY theme/authorize.js /usr/local/lib/node_modules/\@shopify/theme/node_modules/\@shopify/cli-kit/dist/session/authorize.js
 
 # Install themekit
 # RUN curl -s https://shopify.dev/themekit.py | sudo python3
