@@ -17,9 +17,11 @@ RUN set -eux \
     && apt-get install -y nodejs \
 	&& rm -rf /var/lib/apt/lists/*
 
+ENV SHOPIFY_EXTENSION \
+        @shopify/ngrok
 
 RUN set -eux; \
-    npm install -g @shopify/cli @shopify/app @shopify/theme @shopify/ngrok \
+    npm install -g @shopify/cli @shopify/app @shopify/theme $SHOPIFY_EXTENSION \
     && npm cache clean --force && rm -rf /tmp/*\
     && cd /usr/lib/node_modules/\@shopify \
     && grep -IRl "127.0.0.1" ./ | grep 'authorize.js' | xargs sed -i 's/127.0.0.1/0.0.0.0/g' \
