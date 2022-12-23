@@ -4,14 +4,15 @@ FROM ruby:slim-buster
 ENV SHOPIFY_DEPS \
 		curl \
 		g++ \
-		nodejs \
+		make \
 		gcc
 
 # persistent / runtime deps
-RUN set -eux && \
-	apt-get update && \
-	apt-get install -y --no-install-recommends \
+RUN set -eux \
+	&& apt-get update \
+	&& apt-get install -y --no-install-recommends \
 		$SHOPIFY_DEPS \
+    && gem install bundler \
 	&& curl -sL https://deb.nodesource.com/setup_lts.x | bash - \
     && apt-get install -y nodejs \
 	&& rm -rf /var/lib/apt/lists/*
@@ -19,11 +20,10 @@ RUN set -eux && \
 
 RUN set -eux; \
     npm install -g @shopify/cli @shopify/app @shopify/theme @shopify/ngrok \
-    && npm cache clean --force && rm -rf /tmp/* ;
-
-RUN cd /usr/local/lib/node_modules/\@shopify && \
-    grep -IRl "127.0.0.1" ./ | grep 'authorize.js' | xargs sed -i 's/127.0.0.1/0.0.0.0/g' && \
-    grep -IRl 'http://${host}' ./ | grep 'authorize.js' | xargs sed -i 's/http:\/\/\${host}/http:\/\/127.0.0.1/g'
+    && npm cache clean --force && rm -rf /tmp/*\
+    && cd /usr/lib/node_modules/\@shopify \
+    && grep -IRl "127.0.0.1" ./ | grep 'authorize.js' | xargs sed -i 's/127.0.0.1/0.0.0.0/g' \
+    && grep -IRl 'http://${host}' ./ | grep 'authorize.js' | xargs sed -i 's/http:\/\/\${host}/http:\/\/127.0.0.1/g'
 
 WORKDIR /shopify
 
