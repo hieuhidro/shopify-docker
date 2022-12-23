@@ -1,4 +1,4 @@
-FROM debian:buster as ruby-build
+FROM debian:buster-slim as ruby-build
 
 RUN set -eux; \
 	apt-get update; \
@@ -52,9 +52,8 @@ RUN set -eux; \
 		wget \
 		xz-utils \
 	; \
-	rm -rf /var/lib/apt/lists/*;
-
-RUN set -eux; \
+	rm -rf /var/lib/apt/lists/*; \
+    \
     wget -O ruby.tar.xz "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR%-rc}/ruby-$RUBY_VERSION.tar.xz"; \
 	echo "$RUBY_DOWNLOAD_SHA256 *ruby.tar.xz" | sha256sum --check --strict; \
 	\
@@ -80,13 +79,35 @@ RUN set -eux; \
 		--disable-install-doc \
 		--enable-shared \
 	; \
-	make -j "$(nproc)";
+	make -j "$(nproc)"; \
+    cd / \
+    && tar -zcvf /rubypackage.tar.gz /usr/src/ruby; \
+    rm -rf usr/src/ruby; \
+    apt-mark auto '.*' > /dev/null; \
+    apt-mark manual $savedAptMark > /dev/null; \
+    find /usr/local -type f -executable -not \( -name '*tkinter*' \) -exec ldd '{}' ';' \
+        | awk '/=>/ { print $(NF-1) }' \
+        | sort -u \
+        | grep -vE '^/usr/local/lib/' \
+        | xargs -r dpkg-query --search \
+        | cut -d: -f1 \
+        | sort -u \
+        | xargs -r apt-mark manual \
+    ;
 
 FROM ruby:3.0.5-slim as ruby3-0-build
 
 FROM node:lts-slim
 
-COPY --from=ruby-build /usr/src/ruby /usr/src/ruby
+COPY --from=ruby-build /rubypackage.tar.gz /rubypackage.tar.gz
+# skip installing gem documentation
+RUN set -eux; \
+	mkdir -p /usr/local/etc; \
+	{ \
+		echo 'install: --no-document'; \
+		echo 'update: --no-document'; \
+	} >> /usr/local/etc/gemrc
+
 
 # (see persistent deps below)
 ENV SHOPIFY_DEPS \
@@ -112,15 +133,21 @@ RUN set -eux; \
 	; \
     mkdir -p ~/.config/shopify \
     && printf "[analytics]\nenabled = false\n" > ~/.config/shopify/config ; \
-	rm -rf /var/lib/apt/lists/*
+	rm -rf /var/lib/apt/lists/*;
 
 RUN set -eux; \
+    cd /; \
+    mkdir -p /usr/src/ruby; \
+    tar xvfz /rubypackage.tar.gz usr/src/ruby -C /usr/src/ruby; \
+    rm  /rubypackage.tar.gz; \
+    ls -al /usr/src/ruby; \
     cd /usr/src/ruby; \
     make install; \
 #    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+    gem install bundler; \
     cd /; \
-    rm -r /usr/src/ruby; \
-    gem install bundler;
+    rm -rf /usr/src/ruby; \
+	rm -rf /var/lib/apt/lists/*
 
 ## INSTALL RUBY
 ENV GEM_HOME /usr/local/bundle
@@ -134,8 +161,9 @@ COPY --from=ruby3-0-build /usr/local/lib/ruby/3.0.0 /usr/local/lib/ruby/3.0.0
 
 RUN set -eux; \
     npm install -g @shopify/cli @shopify/app @shopify/theme @shopify/ngrok \
-    && npm cache clean --force && rm -rf /tmp/* ; \
-    cd /usr/local/lib/node_modules/\@shopify && \
+    && npm cache clean --force && rm -rf /tmp/* ;
+
+RUN cd /usr/local/lib/node_modules/\@shopify && \
     grep -IRl "127.0.0.1" ./ | grep 'authorize.js' | xargs sed -i 's/127.0.0.1/0.0.0.0/g' && \
     grep -IRl 'http://${host}' ./ | grep 'authorize.js' | xargs sed -i 's/http:\/\/\${host}/http:\/\/127.0.0.1/g'
 # Configure Node.js version
