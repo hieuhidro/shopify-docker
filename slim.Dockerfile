@@ -5,6 +5,7 @@ ENV SHOPIFY_DEPS \
 		curl \
 		g++ \
 		make \
+		git \
 		gcc
 
 # persistent / runtime deps
