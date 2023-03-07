@@ -25,10 +25,17 @@ services:
     environment: 
 # For shopify v3 only
       - SHOPIFY_CLI_NO_ANALYTICS=[1|0]
-      - SHOPIFY_CLI_THEME_TOKEN=[Your theme password]
+      - SHOPIFY_CLI_THEME_TOKEN=[Your theme password (https://apps.shopify.com/theme-access)]
       - SHOPIFY_CLI_TTY=0
       - SHOPIFY_CLI_DEVICE_AUTH=[1|0]
       - SHOPIFY_FLAG_STORE=[Your Store URL]
+# For nginx-proxy 
+      - VIRTUAL_HOST=local-domain
+      - VIRTUAL_PORT=9292
+      - SERVER_HOST_IP=[Host IP:172.17.0.1]
+      - CERT_NAME=default
+      - HTTPS_METHOD=[noredirect|redirect]
+# For nginx-proxy 
     ports:
       - '3456:3456'
       - '9292:9292'
@@ -40,7 +47,7 @@ services:
       - ./config:/root/.config/shopify/config
       - ./.cache:/root/.cache
     environment:
-      - THEMEKIT_PASSWORD=[Your theme password]
+      - THEMEKIT_PASSWORD=[Your theme password (https://apps.shopify.com/theme-access)]
       - THEMEKIT_THEME_ID=[Your theme ID]
       - THEMEKIT_STORE=[Your Store URL]
       - SHOPIFY_CLI_DEVICE_AUTH=[1|0]
@@ -49,23 +56,53 @@ services:
       - '3456:3456'
       - '9292:9292'
       - '8081:8081'
+# For nginx-proxy 
+    networks:
+      - default
+      - proxy
+
+networks:
+  proxy:
+    external: true
+# For nginx-proxy 
 ```
 
 - **docker-compose**
 ```
 docker-compose run --rm --service-ports [shopify/theme] help
 ```
-### Access to the container
 
+- **Starting development a theme**
+```
+docker-compose run --rm --service-ports shopify theme dev
+```
+
+### Access to the container
 ```
 docker run --rm -it hieuhidro/shopify:cli-3.30 bash
+```
+or
+```
+docker-compose run --rm --service-ports shopify bash
 ```
 
 ## Adding more npm shopify extensions: using env
 
 ```
-SHOPIFY_EXTENSION=@shopify/ngrok
+NPM_EXTENSION=@shopify/ngrok
 ```
+
+## NGINX-PROXY (Check the docker-compose.yml)
+
+Running the shopify theme development under nginx-proxy
+
+- Proxy docker image: https://hub.docker.com/r/jwilder/nginx-proxy
+- VIRTUAL_HOST=local-domain
+- VIRTUAL_PORT=9292
+- SERVER_HOST_IP=[Host IP:172.17.0.1]
+- CERT_NAME=default
+- HTTPS_METHOD=noredirect
+- ...
 
 ## themekit:
 

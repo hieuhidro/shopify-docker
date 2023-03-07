@@ -159,8 +159,10 @@ RUN mkdir -p "$GEM_HOME" && chmod 777 "$GEM_HOME"
 
 COPY --from=ruby3-0-build /usr/local/lib/ruby/3.0.0 /usr/local/lib/ruby/3.0.0
 
+ENV NPM_EXTENSION ""
+
 RUN set -eux; \
-    npm install -g @shopify/cli @shopify/app @shopify/theme @shopify/ngrok \
+    npm install -g @shopify/cli @shopify/app @shopify/theme @shopify/ngrok $NPM_EXTENSION \
     && npm cache clean --force && rm -rf /tmp/* ;
 
 # Remove fix authrorize.js that bug fastly.
@@ -186,6 +188,14 @@ CMD ["shopify version"]
 COPY docker-entrypoint.sh /usr/local/bin/
 
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+## Build entrypoint
+
+ENV SERVER_HOST_IP="0.0.0.0"
+ENV VIRTUAL_PORT="9292"
+
+RUN sed -i "s/__SERVER_HOST_IP__/${SERVER_HOST_IP}/g" /usr/local/bin/docker-entrypoint.sh
+RUN sed -i "s/__VIRTUAL_PORT__/${VIRTUAL_PORT}/g" /usr/local/bin/docker-entrypoint.sh
 
 ENTRYPOINT [ "docker-entrypoint.sh" ]
 
